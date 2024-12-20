@@ -25,14 +25,6 @@ const CustomRedo = () => (
   </svg>
 );
 
-// Undo and redo functions for Custom Toolbar
-function undoChange() {
-  this.quill.history.undo();
-}
-function redoChange() {
-  this.quill.history.redo();
-}
-
 // Add sizes to whitelist and register them
 const Size = Quill.import("formats/size");
 Size.whitelist = ["extra-small", "small", "medium", "large"];
@@ -54,10 +46,10 @@ Quill.register(Font, true);
 export const modules = {
   toolbar: {
     container: "#toolbar",
-    handlers: {
-      undo: undoChange,
-      redo: redoChange
-    }
+    // handlers: {
+    //   undo: undoChange,
+    //   redo: redoChange
+    // }
   },
   history: {
     delay: 500,

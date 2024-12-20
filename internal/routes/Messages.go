@@ -19,13 +19,27 @@ func RegisterMessageRoutes(e *echo.Echo) {
 	e.POST("/api/chat-sessions/:id/messages", createMessage)
 }
 
-const systemPrompt = `
+func systemPrompt(isDocumentEditor bool) string {
+
+	formatType := `The artifact should be valid rich HTML document fit for presentation. Make sure that you add adequate spacing / line breaks after sections.`
+	if !isDocumentEditor {
+		formatType = `The artifact should be a valid Markdown document`
+	}
+
+	logo := `The artifact must always start with the following logo.
+
+<img src="/citi.png" alt="logo" />`
+	if !isDocumentEditor {
+		logo = ""
+	}
+
+	return fmt.Sprintf(`
 You are a helpful assistant. For the request made to you, please provide your
 response in the following format, where you are providing the contents of the artifact
 you are generating and your thought process in distinctly demarcated tags. Please ensure that
 you do not provide any content outside of these tags.
 
-The artifact should be valid rich HTML document fit for presentation. Make sure that you add adequate spacing / line breaks after sections.
+%s
 
 If you are asked to generate a document, please think though the various sections of the document and put in as
 much detail as possible. Be thorough and detailed.
@@ -49,10 +63,9 @@ Users first need to install the pre-requisites because...
 If the user makes a change to the artifact during the course of the conversation, you will recieve a diff of the user 
 change in the <user_edits> tag.
 
-The artifact must always start with the following logo.
-
-<img src="/citi.png" alt="logo" />
-`
+%s
+`, formatType, logo)
+}
 
 func createMessage(c echo.Context) error {
 	sessionID := c.Param("id")
@@ -98,7 +111,7 @@ func createMessage(c echo.Context) error {
 	}
 
 	messageToModel := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageType("system"), systemPrompt),
+		llms.TextParts(llms.ChatMessageType("system"), systemPrompt(rb.IsDocumentEditor)),
 	}
 
 	for _, m := range history {
@@ -241,9 +254,10 @@ func getPreviousArtifactVersion(database *db.Db, sessionID, perspective string) 
 }
 
 type requestBody struct {
-	Content      string `json:"content"`
-	Artifact     string `json:"artifact,omitempty"`
-	SelectedText string `json:"selectedText"`
+	Content          string `json:"content"`
+	Artifact         string `json:"artifact,omitempty"`
+	SelectedText     string `json:"selectedText"`
+	IsDocumentEditor bool   `json:"isDocumentEditor"`
 }
 
 type UserChatMessageResponse struct {

@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import ChatSidebar from './components/ChatSidebar'
-import DocumentEditor from './components/DocumentEditor'
-import { Button } from "@/components/ui/button"
-import { MessageSquare } from 'lucide-react'
-import { ChatMessage, ChatSession } from './models'
+import { useState } from 'react';
+import ChatSidebar from './components/ChatSidebar';
+import DocumentEditor from './components/DocumentEditor';
+import CodeEditor from './components/CodeEditor'; // Assume you have a CodeEditor component
+import { Button } from "@/components/ui/button";
+import { MessageSquare } from 'lucide-react';
+import { ChatMessage, ChatSession } from './models';
 
 interface ChatStreamMessage {
   message: string;
@@ -16,6 +17,7 @@ export default function App() {
   const [artifact, setArtifact] = useState('');
   const [chatSession, setChatSession] = useState<ChatSession | null>();
   const [selectedText, setSelectedText] = useState('');
+  const [isDocumentEditor, setIsDocumentEditor] = useState(true); // Track editor type
 
   const createChatSession = async (): Promise<ChatSession | null> => {
     const response = await fetch('/api/chat-sessions', {
@@ -32,7 +34,7 @@ export default function App() {
     }
 
     return null;
-  }
+  };
 
   const handleSendMessage = async (message: string) => {
     if (message.trim()) {
@@ -55,10 +57,10 @@ export default function App() {
           content: message,
           artifact: artifact,
           selectedText,
+          isDocumentEditor 
         })
       });
 
-      // Get message from response stream
       const reader = response.body?.getReader();
       if (reader) {
         const decoder = new TextDecoder();
@@ -67,7 +69,6 @@ export default function App() {
           const { value, done: doneReading } = await reader.read();
           done = doneReading;
           const chunks = decoder.decode(value);
-          // console.log(chunks);
           if (!chunks) {
             continue;
           }
@@ -85,8 +86,8 @@ export default function App() {
               previousChunk = '';
             } catch(e) {
               previousChunk += chunk;
-              console.error("Could not parse chunk", chunk)
-              return
+              console.error("Could not parse chunk", chunk);
+              return;
             }
             
             if (msg.artifact) {
@@ -100,7 +101,7 @@ export default function App() {
         }
       }
     }
-  }
+  };
 
   return (
     <div className="flex h-screen bg-background text-foreground">
@@ -111,13 +112,23 @@ export default function App() {
             <MessageSquare className="h-[1.2rem] w-[1.2rem]" />
           </Button>
           <h1 className="text-2xl font-bold">Composer</h1>
-          <div />
+          <Button variant="outline" onClick={() => setIsDocumentEditor(!isDocumentEditor)}>
+            {isDocumentEditor ? 'Switch to Code Editor' : 'Switch to Document Editor'}
+          </Button>
         </header>
-        <DocumentEditor 
-          document={artifact} 
-          onDocumentChange={(doc) => setArtifact(doc)} 
-          onSelectionChange={setSelectedText} />
+        {isDocumentEditor ? (
+          <DocumentEditor 
+            document={artifact} 
+            onDocumentChange={(doc) => setArtifact(doc)} 
+            onSelectionChange={setSelectedText} 
+          />
+        ) : (
+          <CodeEditor
+            code={artifact}
+            onCodeChange={(code) => setArtifact(code)}
+          />
+        )}
       </div>
     </div>
-  )
+  );
 }
