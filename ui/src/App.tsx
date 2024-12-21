@@ -5,10 +5,17 @@ import CodeEditor from './components/CodeEditor'; // Assume you have a CodeEdito
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from 'lucide-react';
 import { ChatMessage, ChatSession } from './models';
+import "./App.css"
 
 interface ChatStreamMessage {
   message: string;
   artifact: string;
+}
+
+interface ArtifactVersion {
+  version: string;
+  createdBy: string;
+  content: string;
 }
 
 export default function App() {
@@ -18,6 +25,8 @@ export default function App() {
   const [chatSession, setChatSession] = useState<ChatSession | null>();
   const [selectedText, setSelectedText] = useState('');
   const [isDocumentEditor, setIsDocumentEditor] = useState(true); // Track editor type
+  const [artifactVersions, setArtifactVersions] = useState<ArtifactVersion[]>([]);
+  const [selectedVersion, setSelectedVersion] = useState('latest');
 
   useEffect(() => {
     setIsDocumentEditor(localStorage.getItem("isDocumentEditor") === "true");
@@ -44,6 +53,12 @@ export default function App() {
     if (message.trim()) {
       const newMessage = { role: 'human', content: message };
       setChatMessages([...chatMessages, newMessage]);
+      const newVersionHuman = {
+        version: artifactVersions.length === 0 ? '1' : (artifactVersions.length + 1).toString(),
+        createdBy: 'human',
+        content: artifact,
+      };
+      setArtifactVersions([...artifactVersions, newVersionHuman]);
 
       let sessionId = '';
       if (!chatSession) {
@@ -95,6 +110,13 @@ export default function App() {
             }
             
             if (msg.artifact) {
+              const newVersion = {
+                version: artifactVersions.length === 0 ? '2' : (artifactVersions.length + 2).toString(),
+                createdBy: 'ai',
+                content: msg.artifact,
+              };
+              setArtifactVersions([...artifactVersions, newVersionHuman, newVersion]);
+              setSelectedVersion(newVersion.version);
               setArtifact(msg.artifact);
             }
 
@@ -107,11 +129,17 @@ export default function App() {
     }
   };
 
+  const handleVersionChange = (version: string) => {
+    setSelectedVersion(version);
+    const selectedArtifact = artifactVersions.find(v => v.version === version)?.content || '';
+    setArtifact(selectedArtifact);
+  };
+
   const handleChangeDocEditor = () => {
-    const newState = !isDocumentEditor
-    setIsDocumentEditor(newState)
-    localStorage.setItem("isDocumentEditor", newState.toString())
-  }
+    const newState = !isDocumentEditor;
+    setIsDocumentEditor(newState);
+    localStorage.setItem("isDocumentEditor", newState.toString());
+  };
 
   return (
     <div className="flex h-screen bg-background text-foreground">
@@ -122,9 +150,22 @@ export default function App() {
             <MessageSquare className="h-[1.2rem] w-[1.2rem]" />
           </Button>
           <h1 className="text-2xl font-bold">Composer</h1>
-          <Button variant="outline" onClick={handleChangeDocEditor}>
-            {isDocumentEditor ? 'Switch to Code Editor' : 'Switch to Document Editor'}
-          </Button>
+          <div className="flex items-center">
+            <select 
+              value={selectedVersion} 
+              onChange={(e) => handleVersionChange(e.target.value)}
+              className="border rounded px-2 py-1 mr-2 version-dropdown"
+            >
+              {artifactVersions.map(version => (
+                <option key={version.version} value={version.version}>
+                  {version.version === artifactVersions.length.toString() ? 'latest' : `Version ${version.version}`} ({version.createdBy})
+                </option>
+              ))}
+            </select>
+            <Button variant="outline" onClick={handleChangeDocEditor}>
+              {isDocumentEditor ? 'Switch to Code Editor' : 'Switch to Document Editor'}
+            </Button>
+          </div>
         </header>
         {isDocumentEditor ? (
           <DocumentEditor 
