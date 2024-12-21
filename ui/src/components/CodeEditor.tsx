@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import ReactMarkdown from 'react-markdown';
 import { Switch } from '@/components/ui/switch';
-import './CodeEditor.css';
+// import './CodeEditor.css';
+import Markdown from './ui/markdown';
 
 interface CodeEditorProps {
   code: string;
@@ -10,7 +10,7 @@ interface CodeEditorProps {
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange }) => {
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(true);
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
@@ -35,7 +35,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange }) => {
       </div>
       {isPreviewMode ? (
         <div className="p-4 overflow-auto markdown-preview">
-          <ReactMarkdown>{code}</ReactMarkdown>
+          <Markdown contents={code} />
         </div>
       ) : (
         <Editor

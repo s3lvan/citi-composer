@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ChatSidebar from './components/ChatSidebar';
 import DocumentEditor from './components/DocumentEditor';
 import CodeEditor from './components/CodeEditor'; // Assume you have a CodeEditor component
@@ -18,6 +18,10 @@ export default function App() {
   const [chatSession, setChatSession] = useState<ChatSession | null>();
   const [selectedText, setSelectedText] = useState('');
   const [isDocumentEditor, setIsDocumentEditor] = useState(true); // Track editor type
+
+  useEffect(() => {
+    setIsDocumentEditor(localStorage.getItem("isDocumentEditor") === "true");
+  }, [])
 
   const createChatSession = async (): Promise<ChatSession | null> => {
     const response = await fetch('/api/chat-sessions', {
@@ -103,6 +107,12 @@ export default function App() {
     }
   };
 
+  const handleChangeDocEditor = () => {
+    const newState = !isDocumentEditor
+    setIsDocumentEditor(newState)
+    localStorage.setItem("isDocumentEditor", newState.toString())
+  }
+
   return (
     <div className="flex h-screen bg-background text-foreground">
       {isSidebarOpen && <ChatSidebar onSendMessage={handleSendMessage} chatMessages={chatMessages} />}
@@ -112,7 +122,7 @@ export default function App() {
             <MessageSquare className="h-[1.2rem] w-[1.2rem]" />
           </Button>
           <h1 className="text-2xl font-bold">Composer</h1>
-          <Button variant="outline" onClick={() => setIsDocumentEditor(!isDocumentEditor)}>
+          <Button variant="outline" onClick={handleChangeDocEditor}>
             {isDocumentEditor ? 'Switch to Code Editor' : 'Switch to Document Editor'}
           </Button>
         </header>

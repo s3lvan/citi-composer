@@ -4,7 +4,6 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '@/editor.css'
 import EditorToolbar, {modules, formats} from './EditorToolbar';
-import { useRef } from 'react';
 
 interface DocumentEditorProps {
   document: string;

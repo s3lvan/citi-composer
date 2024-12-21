@@ -60,6 +60,8 @@ Users first need to install the pre-requisites because...
 </explanation>
 ---
 
+Please always respond with the complete artifact - do not add placeholders like "[Rest of the document remains the same...]"
+
 If the user makes a change to the artifact during the course of the conversation, you will recieve a diff of the user 
 change in the <user_edits> tag.
 
