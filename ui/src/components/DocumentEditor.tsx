@@ -4,6 +4,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '@/editor.css'
 import EditorToolbar, {modules, formats} from './EditorToolbar';
+import Editor from './doc_editor/Editor';
 
 interface DocumentEditorProps {
   document: string;
@@ -29,20 +30,17 @@ export default function DocumentEditor({ document, onDocumentChange, onSelection
 
   return (
     <div className="flex-grow p-8 overflow-auto">
-      <div className="mx-auto">
-        <div className="relative">
-          <EditorToolbar />
-          <ReactQuill
-              theme="snow"
-              value={document}
-              onChange={handleEditorChange}
-              onChangeSelection={handleSelectionChange}
-              style={{ height: "calc(100vh - 200px)" }}
-              modules={modules}
-              formats={formats}
-            />
-        </div>
-      </div>
+        {/* <EditorToolbar /> */}
+        {/* <ReactQuill
+            theme="snow"
+            value={document}
+            onChange={handleEditorChange}
+            onChangeSelection={handleSelectionChange}
+            style={{ height: "calc(100vh - 200px)" }}
+            modules={modules}
+            formats={formats}
+          /> */}
+        <Editor document={document} />
     </div>
   )
 }
