@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Search, History } from 'lucide-react'
 import { ChatMessage } from '@/models'
+import Markdown from './ui/markdown'
 
 // Mock data for chat history
 const mockChatHistory = [
@@ -69,7 +70,7 @@ export default function ChatSidebar({ onSendMessage, chatMessages }: SideBarProp
         {chatMessages.map((msg, index) => (
           <div key={index} className={`mb-4 ${msg.role === 'human' ? 'text-right' : 'text-left'}`}>
             <div className={`inline-block p-2 rounded-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
-              {msg.content}
+              <Markdown contents={msg.content} />
             </div>
           </div>
         ))}

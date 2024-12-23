@@ -2,9 +2,17 @@ import React, { useEffect } from 'react'
 import { Color } from '@tiptap/extension-color'
 import ListItem from '@tiptap/extension-list-item'
 import TextStyle from '@tiptap/extension-text-style'
-import { EditorProvider, useCurrentEditor, useEditor, EditorContent, EditorContextValue } from '@tiptap/react'
+import Code from '@tiptap/extension-code'
+import Highlight from '@tiptap/extension-highlight'
+import Underline from '@tiptap/extension-underline'
+import Table from '@tiptap/extension-table'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import TableRow from '@tiptap/extension-table-row'
+import { useEditor, EditorContent, EditorContextValue } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Button } from '@/components/ui/button'
+import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import {
   Select,
@@ -104,6 +112,16 @@ const extensions = [
     orderedList: { keepMarks: true, keepAttributes: false },
   }),
   Image,
+  Code,
+  Highlight,
+  Link,
+  Underline,
+  Table.configure({
+    resizable: true,
+  }),
+  TableRow,
+  TableHeader,
+  TableCell,
 ]
 
 interface DocumentEditorProps {
