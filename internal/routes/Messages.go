@@ -21,7 +21,7 @@ func RegisterMessageRoutes(e *echo.Echo) {
 
 func systemPrompt(isDocumentEditor bool) string {
 
-	formatType := `The artifact should be valid rich HTML document fit for presentation. Make sure that you add adequate spacing / line breaks after sections.`
+	formatType := `The artifact should be valid rich HTML document fit for presentation.`
 	if !isDocumentEditor {
 		formatType = `The artifact should be a valid Markdown document`
 	}

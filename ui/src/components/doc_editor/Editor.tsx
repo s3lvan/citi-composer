@@ -96,6 +96,14 @@ const MenuBar = ({editor}: {editor: EditorContextValue}) => {
         >
           <LinkIcon className="h-4 w-4" />
         </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          className={editor.isActive('highlight') ? 'bg-muted' : ''}
+        >
+          H
+        </Button>
         <Button variant="ghost" size="sm">
           <MoreHorizontal className="h-4 w-4" />
         </Button>
