@@ -40,7 +40,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange }) => {
       ) : (
         <Editor
           height="100%"
-          defaultLanguage="javascript"
+          defaultLanguage="markdown"
           value={code}
           onChange={handleEditorChange}
           theme="light"
