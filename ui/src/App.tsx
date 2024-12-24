@@ -30,6 +30,7 @@ export default function App() {
 
   useEffect(() => {
     setIsDocumentEditor(localStorage.getItem("isDocumentEditor") === "true");
+    setArtifact('')
   }, [])
 
   const createChatSession = async (): Promise<ChatSession | null> => {
@@ -137,6 +138,7 @@ export default function App() {
 
   const handleChangeDocEditor = () => {
     const newState = !isDocumentEditor;
+    setArtifact('')
     setIsDocumentEditor(newState);
     localStorage.setItem("isDocumentEditor", newState.toString());
   };
@@ -170,7 +172,11 @@ export default function App() {
         {isDocumentEditor ? (
           <DocumentEditor 
             document={artifact} 
-            onDocumentChange={(doc) => setArtifact(doc)} 
+            onDocumentChange={(doc) => {
+              if (isDocumentEditor) {
+                setArtifact(doc)
+              }
+            }} 
             onSelectionChange={setSelectedText}
             onComment={(comment, selectedText) => {
               handleSendMessage(comment, selectedText);
@@ -180,6 +186,9 @@ export default function App() {
           <CodeEditor
             code={artifact}
             onCodeChange={(code) => setArtifact(code)}
+            onComment={(comment, selectedText) => {
+              handleSendMessage(comment, selectedText);
+            }}
           />
         )}
       </div>
