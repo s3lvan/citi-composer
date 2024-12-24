@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+// Replace with your own Textarea import or just use <textarea>.
+import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Search, History } from 'lucide-react'
 import { ChatMessage } from '@/models'
 import Markdown from './ui/markdown'
+import "./chat.css"
 
 // Mock data for chat history
 const mockChatHistory = [
@@ -29,8 +31,10 @@ export default function ChatSidebar({ onSendMessage, chatMessages }: SideBarProp
   )
 
   const sendMessage = () => {
-    onSendMessage(message);
-    setMessage('')
+    if (message.trim() !== '') {
+      onSendMessage(message);
+      setMessage('')
+    }
   }
 
   return (
@@ -46,12 +50,12 @@ export default function ChatSidebar({ onSendMessage, chatMessages }: SideBarProp
           <PopoverContent className="w-80">
             <h3 className="text-md font-semibold mb-2">Chat History</h3>
             <div className="relative mb-2">
-              <Input
+              <input
                 type="text"
                 placeholder="Search history..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
+                className="pl-8 w-full border rounded px-2 py-1"
               />
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             </div>
@@ -69,21 +73,39 @@ export default function ChatSidebar({ onSendMessage, chatMessages }: SideBarProp
       <ScrollArea className="flex-grow p-4">
         {chatMessages.map((msg, index) => (
           <div key={index} className={`mb-4 ${msg.role === 'human' ? 'text-right' : 'text-left'}`}>
-            <div className={`inline-block p-2 rounded-lg ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
+            <div
+              className={`inline-block p-2 rounded-lg chat-bubbles ${
+                msg.role === 'user'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground'
+              }`}
+            >
               <Markdown contents={msg.content} />
             </div>
           </div>
         ))}
       </ScrollArea>
       <div className="p-4 border-t border-border">
-        <Input
-          type="text"
+        <Textarea
           placeholder="Type your message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          onKeyDown={(e) => {
+            // Submit on Command/Ctrl + Enter
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault()
+              sendMessage()
+            }
+          }}
+          className="resize-none"
         />
-        <Button onClick={sendMessage} className="mt-2 w-full">Send</Button>
+
+        <Button onClick={sendMessage} className="mt-2 w-full">
+          Send
+        </Button>
+        <div className="text-xs text-muted-foreground mt-1">
+          Press <span className="font-mono">⌘</span>+Enter or <span className="font-mono">Ctrl</span>+Enter to send
+        </div>
       </div>
     </div>
   )

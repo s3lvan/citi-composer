@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,8 +45,10 @@ you do not provide any content outside of these tags.
 If you are asked to generate a document, please think though the various sections of the document and put in as
 much detail as possible. Be thorough and detailed.
 
-Here is example output:
 
+If making large changes to the file or if the file is new then respond in the following format. 
+
+Please always respond with the complete artifact - do not add placeholders like "[Rest of the document remains the same...]"
 ---
 <artifact>
 <img src="/citi.svg" alt="logo" />
@@ -60,7 +63,18 @@ Users first need to install the pre-requisites because...
 </explanation>
 ---
 
-Please always respond with the complete artifact - do not add placeholders like "[Rest of the document remains the same...]"
+If making smaller changes to the file (less than 30 lines), then respond using the following:
+---
+<edit>
+<textToReplace>Replace this text from the original</textToReplace>
+<replacement>With this text</replacement>
+</edit>
+<explanation>
+Users first need to install the pre-requisites because...
+</explanation>
+---
+
+Prefer the edit method over creating the complete file.
 
 If the user makes a change to the artifact during the course of the conversation, you will recieve a diff of the user 
 change in the <user_edits> tag.
@@ -68,6 +82,8 @@ change in the <user_edits> tag.
 %s
 `, formatType, logo)
 }
+
+var editRegex = regexp.MustCompile(`(?s)<edit>\s*<textToReplace>(.*?)</textToReplace>\s*<replacement>(.*?)</replacement>\s*</edit>`)
 
 func createMessage(c echo.Context) error {
 	sessionID := c.Param("id")
@@ -113,7 +129,7 @@ func createMessage(c echo.Context) error {
 	}
 
 	messageToModel := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageType("system"), systemPrompt(rb.IsDocumentEditor)),
+		llms.TextParts(llms.ChatMessageType("human"), systemPrompt(rb.IsDocumentEditor)),
 	}
 
 	for _, m := range history {
@@ -147,9 +163,34 @@ func createMessage(c echo.Context) error {
 		// log.Printf("inExplanation is %v", inExplanation)
 		collectedChunks += string(chunk)
 
+		if strings.Contains(collectedChunks, "</edit>") {
+			log.Printf("In </edit>")
+			matches := editRegex.FindAllStringSubmatch(collectedChunks, -1)
+			log.Printf("Matches are %+v", matches)
+			for _, m := range matches {
+				textToReplace := m[1]
+				replacement := m[2]
+				log.Printf("textToReplace = %s and replacement = %s", textToReplace, replacement)
+
+				// Perform the replacement on the previous artifact
+				previousArtifact = strings.ReplaceAll(previousArtifact, textToReplace, replacement)
+				streamMessage.Artifact = previousArtifact
+				log.Printf("Replacement done %s", previousArtifact)
+				err := json.NewEncoder(w).Encode(streamMessage)
+				if err != nil {
+					return err
+				}
+				w.Write([]byte("\r\n"))
+				w.Flush()
+			}
+			allComponents := strings.Split(collectedChunks, "</edit>")
+			collectedChunks = allComponents[len(allComponents)-1]
+		}
+
 		if strings.Contains(collectedChunks, "<artifact>") {
 			inArtifact = true
-			collectedChunks = strings.Replace(collectedChunks, "<artifact>", "", -1)
+			parts := strings.Split(collectedChunks, "<artifact>")
+			collectedChunks = parts[1]
 			streamMessage.Artifact += collectedChunks
 			return nil
 		}
@@ -185,7 +226,8 @@ func createMessage(c echo.Context) error {
 
 		if strings.Contains(collectedChunks, "<explanation>") {
 			inExplanation = true
-			collectedChunks = strings.Replace(collectedChunks, "<explanation>", "", -1)
+			parts := strings.Split(collectedChunks, "<explanation>")
+			collectedChunks = parts[1]
 			streamMessage.Message += collectedChunks
 			return nil
 		}
