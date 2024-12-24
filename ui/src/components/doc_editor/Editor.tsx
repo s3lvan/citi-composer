@@ -170,11 +170,24 @@ const TiptapEditor = ({ document, onDocumentChange, onComment }: DocumentEditorP
       <MenuBar editor={editor}/>
       <div className="p-4">
         <EditorContent editor={editor} />
-        <CommentBubbleMenu onSubmitComment={(comment) => {
-          const { from, to } = editor.state.selection
-          const selectedText = editor.state.doc.textBetween(from, to, ' ');
-          onComment(comment, selectedText)
-        }} editor={editor} />
+        <CommentBubbleMenu 
+          editor={editor}
+          onSubmitComment={(comment) => {
+            const { from, to } = editor.state.selection
+            const selectedText = editor.state.doc.textBetween(from, to, ' ');
+            onComment(comment, selectedText)
+          }}
+          onExpand={() => {
+            const { from, to } = editor.state.selection
+            const selectedText = editor.state.doc.textBetween(from, to, ' ');
+            onComment(`Could you please expand this text?`, selectedText)
+          }}
+          onRephrase={() => {
+            const { from, to } = editor.state.selection
+            const selectedText = editor.state.doc.textBetween(from, to, ' ');
+            onComment(`Could you please rephrase this text?`, selectedText)
+          }}
+        />
       </div>
     </div>
   )
