@@ -9,7 +9,7 @@ import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
-import { useEditor, EditorContent, EditorContextValue } from '@tiptap/react'
+import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Button } from '@/components/ui/button'
 import Link from '@tiptap/extension-link'
@@ -24,13 +24,15 @@ import {
 import { LinkIcon, MoreHorizontal } from 'lucide-react'
 import './styles.scss'
 import { CommentBubbleMenu } from './CommentBubbleMenu'
+import { Editor as TTEditor } from "@tiptap/core"
 
-const MenuBar = ({editor}: {editor: EditorContextValue}) => {
+const MenuBar = ({editor}: {editor: TTEditor}) => {
   return (
     <div className="flex items-center gap-2 p-2 border-b">
       <Select 
         defaultValue="paragraph"
         onValueChange={(value) => {
+          console.log(editor.isActive("bold"))
           if (value === 'paragraph') {
             editor.chain().focus().setParagraph().run()
           } else if (value.startsWith('h')) {
@@ -135,9 +137,10 @@ const extensions = [
 interface DocumentEditorProps {
   document: string;
   onDocumentChange?: (newDocument: string) => void;
+  onComment: (comment: string, selectedText: string) => void;
 }
 
-const TiptapEditor = ({ document, onDocumentChange }: DocumentEditorProps) => {
+const TiptapEditor = ({ document, onDocumentChange, onComment }: DocumentEditorProps) => {
   const editor = useEditor({
     extensions,
     content: document,
@@ -148,15 +151,13 @@ const TiptapEditor = ({ document, onDocumentChange }: DocumentEditorProps) => {
     },
     onUpdate: ({ editor }) => {
       const newContent = editor.getHTML()
-      console.log("Updated content", newContent)
       onDocumentChange?.(newContent)
     }
   })
 
   useEffect(() => {
     if (editor && document !== editor.getHTML()) {
-      console.log('Updating editor content:', document)
-      editor.commands.setContent(document, false)
+      editor.commands.setContent(document, true)
     }
   }, [document, editor])
 
@@ -169,7 +170,11 @@ const TiptapEditor = ({ document, onDocumentChange }: DocumentEditorProps) => {
       <MenuBar editor={editor}/>
       <div className="p-4">
         <EditorContent editor={editor} />
-        <CommentBubbleMenu onSubmitComment={() => {}} editor={editor} />
+        <CommentBubbleMenu onSubmitComment={(comment) => {
+          const { from, to } = editor.state.selection
+          const selectedText = editor.state.doc.textBetween(from, to, ' ');
+          onComment(comment, selectedText)
+        }} editor={editor} />
       </div>
     </div>
   )

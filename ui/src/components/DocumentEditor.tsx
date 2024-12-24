@@ -10,10 +10,10 @@ interface DocumentEditorProps {
   document: string;
   onDocumentChange: (newDocument: string) => void;
   onSelectionChange: (selectedText: string) => void;
+  onComment: (comment: string, selectedText: string) => void;
 }
 
-export default function DocumentEditor({ document, onDocumentChange, onSelectionChange }: DocumentEditorProps) {
-  
+export default function DocumentEditor({ document, onDocumentChange, onSelectionChange, onComment }: DocumentEditorProps) {
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       onDocumentChange(value)
@@ -40,7 +40,7 @@ export default function DocumentEditor({ document, onDocumentChange, onSelection
             modules={modules}
             formats={formats}
           /> */}
-        <Editor document={document} />
+        <Editor document={document} onDocumentChange={handleEditorChange} onComment={onComment} />
     </div>
   )
 }

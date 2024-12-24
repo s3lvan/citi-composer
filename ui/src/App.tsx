@@ -49,7 +49,7 @@ export default function App() {
     return null;
   };
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (message: string, selection: string = '') => {
     if (message.trim()) {
       const newMessage = { role: 'human', content: message };
       setChatMessages([...chatMessages, newMessage]);
@@ -75,7 +75,7 @@ export default function App() {
         body: JSON.stringify({ 
           content: message,
           artifact: artifact,
-          selectedText,
+          selectedText: selectedText || selection,
           isDocumentEditor 
         })
       });
@@ -171,7 +171,10 @@ export default function App() {
           <DocumentEditor 
             document={artifact} 
             onDocumentChange={(doc) => setArtifact(doc)} 
-            onSelectionChange={setSelectedText} 
+            onSelectionChange={setSelectedText}
+            onComment={(comment, selectedText) => {
+              handleSendMessage(comment, selectedText);
+            }}
           />
         ) : (
           <CodeEditor
