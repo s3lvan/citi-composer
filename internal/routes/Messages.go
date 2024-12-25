@@ -80,6 +80,8 @@ If the user makes a change to the artifact during the course of the conversation
 change in the <user_edits> tag.
 
 %s
+
+IMPORTANT: Please do not respond with text outside of the artifact, explanation or edit tags.
 `, formatType, logo)
 }
 
@@ -122,6 +124,26 @@ func createMessage(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	// Retrieve session from database
+	session, err := database.GetChatSession(sessionID)
+	if err != nil {
+		return err
+	}
+
+	if session.Title == "" {
+		title, err := generateSessionTitle(c, rb.Content)
+		if err != nil {
+			log.Printf("Error: %s generating session title for session: %s", err, sessionID)
+		}
+
+		session.Title = title
+		err = database.UpdateChatSession(session)
+		if err != nil {
+			log.Printf("Error updating session title for session: %s to title: %s", sessionID, title)
+		}
+	}
+
+	// If title is empty, then generate one
 
 	history, err := database.ListChatMessages(sessionID)
 	if err != nil {
@@ -295,6 +317,22 @@ func getPreviousArtifactVersion(database *db.Db, sessionID, perspective string) 
 	}
 
 	return "", nil
+}
+
+func generateSessionTitle(c echo.Context, userRequest string) (string, error) {
+	prompt := fmt.Sprintf(`Could you please generate a short title (a short sentence or phrase) for a user chat session where the user 
+						has requested the following\n
+						USER REQUEST: %s\nPlease respond with just one Title and do not provide an explanation or options`, userRequest)
+	aiModel := c.Get("llm").(llms.Model)
+	messageToModel := []llms.MessageContent{
+		llms.TextParts("human", prompt),
+	}
+	result, err := aiModel.GenerateContent(c.Request().Context(), messageToModel, llms.WithMaxTokens(512))
+	if err != nil {
+		return "", err
+	}
+
+	return result.Choices[0].Content, nil
 }
 
 type requestBody struct {

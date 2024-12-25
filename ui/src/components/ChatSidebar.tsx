@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button"
 // Replace with your own Textarea import or just use <textarea>.
 import { Textarea } from "@/components/ui/textarea"
@@ -6,17 +6,18 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Search, History } from 'lucide-react'
 import { ChatMessage } from '@/models'
+import { ChatSession } from '@/session'
 import Markdown from './ui/markdown'
 import "./chat.css"
 
 // Mock data for chat history
-const mockChatHistory = [
-  { id: 1, title: "Document 1 - Introduction", date: "2023-06-01" },
-  { id: 2, title: "Document 2 - Chapter 1 Draft", date: "2023-06-02" },
-  { id: 3, title: "Document 3 - Conclusion", date: "2023-06-03" },
-  { id: 4, title: "Document 4 - Research Notes", date: "2023-06-04" },
-  { id: 5, title: "Document 5 - Project Outline", date: "2023-06-05" },
-]
+// const mockChatHistory = [
+//   { id: 1, title: "Document 1 - Introduction", date: "2023-06-01" },
+//   { id: 2, title: "Document 2 - Chapter 1 Draft", date: "2023-06-02" },
+//   { id: 3, title: "Document 3 - Conclusion", date: "2023-06-03" },
+//   { id: 4, title: "Document 4 - Research Notes", date: "2023-06-04" },
+//   { id: 5, title: "Document 5 - Project Outline", date: "2023-06-05" },
+// ]
 
 type SideBarProps = {
   onSendMessage: (message: string) => void
@@ -26,7 +27,16 @@ type SideBarProps = {
 export default function ChatSidebar({ onSendMessage, chatMessages }: SideBarProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState('');
-  const filteredHistory = mockChatHistory.filter(chat => 
+  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
+
+  useEffect(() => {
+    fetch('/api/chat-sessions')
+      .then(res => res.json() as Promise<ChatSession[]>)
+      .then(setChatHistory)
+      .catch(err => console.error(err))
+  }, [])
+
+  const filteredHistory = (chatHistory || []).filter(chat => 
     chat.title.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
