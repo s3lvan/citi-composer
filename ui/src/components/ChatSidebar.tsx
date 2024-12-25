@@ -22,9 +22,10 @@ import "./chat.css"
 type SideBarProps = {
   onSendMessage: (message: string) => void
   chatMessages: ChatMessage[]
+  onRestoreSession: (id: string) => void
 }
 
-export default function ChatSidebar({ onSendMessage, chatMessages }: SideBarProps) {
+export default function ChatSidebar({ onSendMessage, chatMessages, onRestoreSession }: SideBarProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
@@ -72,8 +73,7 @@ export default function ChatSidebar({ onSendMessage, chatMessages }: SideBarProp
             <ScrollArea className="h-48">
               {filteredHistory.map((chat) => (
                 <div key={chat.id} className="mb-2 p-2 text-sm hover:bg-accent rounded cursor-pointer">
-                  <div className="font-medium">{chat.title}</div>
-                  <div className="text-xs text-muted-foreground">{chat.date}</div>
+                  <div className="font-medium" onClick={() => onRestoreSession(chat.id)}>{chat.title}</div>
                 </div>
               ))}
             </ScrollArea>

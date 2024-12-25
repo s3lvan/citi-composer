@@ -143,9 +143,16 @@ export default function App() {
     localStorage.setItem("isDocumentEditor", newState.toString());
   };
 
+  const handleRestoreSession = async (id: string) => {
+    const res = await fetch(`/api/chat-sessions/${id}/messages`)
+    const messages = await res.json() as ChatMessage[]
+    setChatMessages(messages)
+    setArtifact(messages[messages.length - 1].doc)
+  }
+
   return (
     <div className="flex h-screen bg-background text-foreground">
-      {isSidebarOpen && <ChatSidebar onSendMessage={handleSendMessage} chatMessages={chatMessages} />}
+      {isSidebarOpen && <ChatSidebar onSendMessage={handleSendMessage} chatMessages={chatMessages} onRestoreSession={handleRestoreSession} />}
       <div className="flex-1 flex flex-col">
         <header className="flex justify-between items-center p-4 border-b">
           <Button variant="ghost" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>

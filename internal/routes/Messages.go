@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -17,7 +18,23 @@ import (
 )
 
 func RegisterMessageRoutes(e *echo.Echo) {
+	e.GET("/api/chat-sessions/:id/messages", getMessages)
 	e.POST("/api/chat-sessions/:id/messages", createMessage)
+}
+
+func getMessages(c echo.Context) error {
+	sessionID := c.Param("id")
+	database := c.Get("db").(*db.Db)
+
+	log.Printf("Getting messages for session: %s", sessionID)
+
+	msgs, err := database.ListChatMessages(sessionID)
+	if err != nil {
+		return err
+	}
+	log.Printf("Messages are %+v", msgs)
+
+	return c.JSON(http.StatusOK, msgs)
 }
 
 func systemPrompt(isDocumentEditor bool) string {
