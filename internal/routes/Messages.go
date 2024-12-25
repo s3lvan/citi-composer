@@ -116,15 +116,14 @@ func createMessage(c echo.Context) error {
 	}
 
 	diff := rb.Artifact
-	previousArtifact, err := getPreviousArtifactVersion(database, sessionID, "ai")
+	previousAIArtifact, err := getPreviousArtifactVersion(database, sessionID, "ai")
 	if err != nil {
 		return err
 	}
 
-	if previousArtifact != "" {
+	if previousAIArtifact != "" {
 		dmp := diffmatchpatch.New()
-		diff = dmp.DiffPrettyText(dmp.DiffMain(previousArtifact, rb.Artifact, false))
-		log.Printf("Diff calculated is %s", diff)
+		diff = dmp.DiffPrettyText(dmp.DiffMain(previousAIArtifact, rb.Artifact, false))
 	}
 
 	msg := models.ChatMessage{
@@ -196,25 +195,26 @@ func createMessage(c echo.Context) error {
 	inExplanation := false
 	collectedChunks := ""
 
+	previousArtifact, err := getPreviousArtifactVersion(database, sessionID, "")
+	if err != nil {
+		return err
+	}
+
 	result, err := aiModel.GenerateContent(c.Request().Context(), messageToModel, llms.WithMaxTokens(8192), llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
-		// log.Printf("Chunk is %s", chunk)
-		// log.Printf("inArtifact is %v", inArtifact)
-		// log.Printf("inExplanation is %v", inExplanation)
+		log.Printf("Chunk is %s", chunk)
+		log.Printf("inArtifact is %v", inArtifact)
+		log.Printf("inExplanation is %v", inExplanation)
 		collectedChunks += string(chunk)
 
 		if strings.Contains(collectedChunks, "</edit>") {
-			log.Printf("In </edit>")
 			matches := editRegex.FindAllStringSubmatch(collectedChunks, -1)
-			log.Printf("Matches are %+v", matches)
 			for _, m := range matches {
 				textToReplace := m[1]
 				replacement := m[2]
-				log.Printf("textToReplace = %s and replacement = %s", textToReplace, replacement)
 
 				// Perform the replacement on the previous artifact
 				previousArtifact = strings.ReplaceAll(previousArtifact, textToReplace, replacement)
 				streamMessage.Artifact = previousArtifact
-				log.Printf("Replacement done %s", previousArtifact)
 				err := json.NewEncoder(w).Encode(streamMessage)
 				if err != nil {
 					return err
@@ -275,6 +275,7 @@ func createMessage(c echo.Context) error {
 			inExplanation = false
 			frags := strings.Split(string(chunk), "</explanation>")
 			streamMessage.Message += frags[0]
+			streamMessage.Message = strings.Replace(streamMessage.Message, "</explanation>", "", -1)
 			err := json.NewEncoder(w).Encode(streamMessage)
 			if err != nil {
 				return err
