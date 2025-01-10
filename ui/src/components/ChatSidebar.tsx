@@ -8,7 +8,7 @@ import { Search, History } from 'lucide-react'
 import { ChatMessage } from '@/models'
 import { ChatSession } from '@/session'
 import Markdown from './ui/markdown'
-import "./chat.css"
+import "./Chat.css"
 
 // Mock data for chat history
 // const mockChatHistory = [
@@ -119,4 +119,3 @@ export default function ChatSidebar({ onSendMessage, chatMessages, onRestoreSess
       </div>
     </div>
   )
-}
